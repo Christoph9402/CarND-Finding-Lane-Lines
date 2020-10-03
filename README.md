@@ -1,56 +1,16 @@
-# **Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
-
-Overview
----
-
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
-
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
-
-
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
-
-1. Describe the pipeline
-
-2. Identify any shortcomings
-
-3. Suggest possible improvements
-
-We encourage using images in your writeup to demonstrate how your pipeline works.  
-
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
-
-
-The Project
----
-
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
-
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) if you haven't already.
-
-**Step 2:** Open the code in a Jupyter Notebook
-
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out [Udacity's free course on Anaconda and Jupyter Notebooks](https://classroom.udacity.com/courses/ud1111) to get started.
-
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
-
-`> jupyter notebook`
-
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
-
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+#Finding Lane Lines on the Road  
+The goals / steps of this project are the following:  
+•	Make a pipeline that finds lane lines on the road  
+•	Reflect on your work in a written report  
+Reflection  
+1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
+My pipeline for detecting lane lines consists of 6 Steps. First, each frame of a video is converted into a grayscale. Then, a gaussian blur is applied to filter out noise. I found that a kernel size of 9 works best (Image 1). After smoothing the image, I applied the canny edge function to detect edges. For that I used a low threshold of 50 and a high threshold of 180 (Image 2). Afterwards I defined the 4 vertices for the mask (leftlow=[30,540], rightlow=[930,540], leftup=[460,320], rightup=[510,320]) (Image 3). Only edges inside this mask are being used for the Hough-Transformation, which is the fifth step in my pipeline. Before creating the Hough-lines, I defined parameters for it, which took a lot of tweaking. I got the best results using rho=6, theta=pi/60, a threshold of 5, a minimum line length of 45 and a maximum line gap of 60. Afterwards I applied the Hough-lines function, which draws lines onto an empty canvas (Image 4). Using the weighted_img function, I overlayed the original image and the created Hough-lines (Image 5).
+In order to draw a single line on the left and right lanes, I modified the draw_lines() by calculate the slope for each Hough-line (using formula (y2-y1)/(x2-x1)). If the calculated slope is greater than 0, the Hough line probably belongs to the right lane. To make sure, lines that have a positive slope but also have a x coordinate, which is located on the left side of the image are not used. Also, lines are not used if the slope is too flat. That way they won’t distort the result of the single line later. Every other line is used. Then 2 empty arrays – one containing every x-coordinate and one containing every y coordinate – are being filled. After every of line the Hough lines has been processed and 2 arrays have bee filled, the poly1d function was applied to create a linear function using the 2 arrays. For creating a single line, it is necessary to know 4 coordinates (2 x- and 2 y-coordinates). Y1=540 and y2=320 was used to have an upper and lower limit. To calculate the 2 x values, y1 and y2 were used in the linear function created earlier. Finally, the line was drawn using those 4 coordinates. The left line was created the same way. The result with the single Lines can be seen in image 6.
+  
+  
+  
+2. Identify potential shortcomings with your current pipeline
+One potential shortcoming would be what would happen when there is a marking inside the masked area (or for example a manhole cover), which is detected by the canny function. This would distort the created line and shift it to one side or rotate it. Another problem is that the drawn line is only linear and not a quadratic function.  This way, curves are not accurately represented. Also, the lines wobble, and are not smooth.
+3. Suggest possible improvements to your pipeline
+A possible improvement would be to implement a variable, which averages the position of the coordinates of each lane lines (using for example the last 3 lines). This could prevent the wobble of the lane lines. Also, the mask could be modified, so that the part of the road in between the lanes is not used to create Hough-lines. For that the mask should have the shape of an arch, instead of a trapeze. 
 
